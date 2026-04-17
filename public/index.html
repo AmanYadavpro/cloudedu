@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CloudEdu — Student Resource Portal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1e28;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8ecf4;
+    --muted: #7a8299;
+    --accent: #4f8ef7;
+    --accent2: #38d9a9;
+    --accent3: #f7974f;
+    --danger: #f76f6f;
+    --success: #38d9a9;
+    --font: 'Space Grotesk', sans-serif;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* ─── TOPBAR ─── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,12,16,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 60px;
+  }
+  .logo { font-family: var(--display); font-size: 1.3rem; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: color .2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .user-badge { background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 0.3rem 0.9rem; font-size: 0.83rem; color: var(--muted); cursor: pointer; }
+
+  /* ─── LAYOUT ─── */
+  .app { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+
+  /* ─── SIDEBAR ─── */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    display: flex; flex-direction: column; gap: 0.25rem;
+  }
+  .sidebar-section { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 0.8rem 1.2rem 0.4rem; }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.6rem 1.2rem; cursor: pointer;
+    font-size: 0.88rem; font-weight: 500; color: var(--muted);
+    border-left: 2px solid transparent; transition: all .15s;
+  }
+  .sidebar-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .sidebar-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,142,247,0.07); }
+  .sidebar-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  /* ─── MAIN ─── */
+  main { padding: 2rem; overflow-y: auto; }
+
+  /* ─── VIEWS ─── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ─── HERO STATS ─── */
+  .page-title { font-family: var(--display); font-size: 1.8rem; margin-bottom: 0.25rem; }
+  .page-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 1.2rem 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.blue::before { background: var(--accent); }
+  .stat-card.green::before { background: var(--accent2); }
+  .stat-card.orange::before { background: var(--accent3); }
+  .stat-card.red::before { background: var(--danger); }
+  .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.6rem; }
+  .stat-val { font-size: 1.9rem; font-weight: 700; font-family: var(--display); }
+  .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+  .stat-sub.up { color: var(--accent2); }
+  .stat-sub.down { color: var(--danger); }
+
+  /* ─── CARDS GRID ─── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-title { font-size: 1.05rem; font-weight: 600; }
+  .btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: opacity .2s; font-family: var(--font); }
+  .btn:hover { opacity: 0.85; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+
+  .resources-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .resource-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem;
+    cursor: pointer; transition: border-color .2s, transform .15s;
+  }
+  .resource-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .rc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.8rem; }
+  .rc-icon { font-size: 1.5rem; }
+  .rc-badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; }
+  .badge-pdf { background: rgba(247,151,79,0.15); color: var(--accent3); }
+  .badge-video { background: rgba(247,111,111,0.15); color: var(--danger); }
+  .badge-code { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .badge-notes { background: rgba(56,217,169,0.15); color: var(--accent2); }
+  .rc-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .rc-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.8rem; }
+  .rc-footer { display: flex; align-items: center; justify-content: space-between; }
+  .rc-subject { font-size: 0.75rem; background: var(--surface2); padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--muted); }
+  .rc-downloads { font-size: 0.75rem; color: var(--muted); }
+
+  /* ─── LOAD BALANCER DASHBOARD ─── */
+  .lb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  .lb-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 1.5rem; }
+  .lb-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .servers-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .server-row { display: flex; align-items: center; gap: 0.75rem; }
+  .server-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .dot-orange { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+  .dot-red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+  .server-name { font-size: 0.87rem; font-weight: 500; flex: 1; }
+  .server-region { font-size: 0.75rem; color: var(--muted); }
+  .server-load-bar { flex: 2; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+  .server-load-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .fill-green { background: var(--accent2); }
+  .fill-orange { background: var(--accent3); }
+  .fill-red { background: var(--danger); }
+  .server-pct { font-size: 0.78rem; font-weight: 600; min-width: 36px; text-align: right; }
+
+  /* ─── CHART ─── */
+  .chart-area { height: 140px; display: flex; align-items: flex-end; gap: 4px; padding-top: 10px; }
+  .chart-bar { flex: 1; border-radius: 4px 4px 0 0; transition: height 0.6s ease, background 0.3s; min-height: 4px; background: rgba(79,142,247,0.5); }
+  .chart-bar:hover { background: var(--accent); }
+  .chart-labels { display: flex; gap: 4px; margin-top: 4px; }
+  .chart-labels span { flex: 1; font-size: 0.65rem; color: var(--muted); text-align: center; }
+
+  /* ─── MONITOR ─── */
+  .monitor-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .metric-pill {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem;
+    text-align: center;
+  }
+  .metric-pill .m-val { font-size: 1.6rem; font-weight: 700; font-family: var(--display); }
+  .metric-pill .m-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.2rem; }
+  .metric-pill.ok .m-val { color: var(--accent2); }
+  .metric-pill.warn .m-val { color: var(--accent3); }
+  .metric-pill.crit .m-val { color: var(--danger); }
+
+  .log-box {
+    background: #080a0d; border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.76rem;
+    height: 200px; overflow-y: auto; color: #7a9f7a;
+    line-height: 1.6;
+  }
+  .log-box .log-err { color: #f76f6f; }
+  .log-box .log-warn { color: var(--accent3); }
+  .log-box .log-info { color: #4f8ef7; }
+
+  /* ─── SECURITY ─── */
+  .security-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .sec-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
+  .sec-header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; }
+  .sec-icon { font-size: 1.3rem; }
+  .sec-title { font-size: 0.95rem; font-weight: 600; }
+  .sec-status { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; padding: 0.3rem 0.7rem; border-radius: 20px; width: fit-content; margin-top: 0.5rem; }
+  .status-ok { background: rgba(56,217,169,0.12); color: var(--accent2); }
+  .status-warn { background: rgba(247,151,79,0.12); color: var(--accent3); }
+  .rule-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.75rem; }
+  .rule-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+  .rule-item .bullet { width: 5px; height: 5px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+
+  /* ─── UPLOAD MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 2rem; width: 480px; max-width: 95vw; }
+  .modal-title { font-family: var(--display); font-size: 1.3rem; margin-bottom: 0.3rem; }
+  .modal-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .upload-zone {
+    border: 2px dashed var(--border2); border-radius: 10px; padding: 2rem; text-align: center;
+    cursor: pointer; transition: border-color .2s; margin-bottom: 1rem;
+  }
+  .upload-zone:hover { border-color: var(--accent); }
+  .upload-zone .up-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .upload-zone p { font-size: 0.85rem; color: var(--muted); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .form-row input, .form-row select, .modal input, .modal select {
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px;
+    padding: 0.6rem 0.9rem; color: var(--text); font-size: 0.85rem; font-family: var(--font); width: 100%;
+  }
+  .form-row input:focus, .modal input:focus { outline: none; border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; }
+  .btn-danger { background: var(--danger); }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: 10px; padding: 0.8rem 1.2rem;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem;
+    transform: translateY(100px); opacity: 0; transition: all 0.3s;
+    z-index: 300; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--accent2); }
+  .toast.info { border-left: 3px solid var(--accent); }
+
+  /* ─── USERS ─── */
+  .users-table { width: 100%; border-collapse: collapse; }
+  .users-table th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+  .users-table td { padding: 0.8rem 1rem; font-size: 0.87rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(79,142,247,0.2); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: var(--accent); margin-right: 0.5rem; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    aside { display: none; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .resources-grid { grid-template-columns: repeat(2, 1fr); }
+    .lb-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Cloud<span>Edu</span></div>
+  <nav class="nav-links">
+    <a class="active" onclick="showView('dashboard')">Dashboard</a>
+    <a onclick="showView('resources')">Resources</a>
+    <a onclick="showView('loadbalancer')">Load Balancer</a>
+    <a onclick="showView('monitor')">Monitor</a>
+    <a onclick="showView('security')">Security</a>
+    <a onclick="showView('users')">Users</a>
+  </nav>
+  <div class="header-right">
+    <div class="user-badge">👤 Aman · SE IT-C</div>
+  </div>
+</header>
+
+<div class="app">
+  <aside id="sidebar">
+    <div class="sidebar-section">Main</div>
+    <div class="sidebar-item active" onclick="showView('dashboard')"><span class="icon">🏠</span> Dashboard</div>
+    <div class="sidebar-item" onclick="showView('resources')"><span class="icon">📚</span> Resources</div>
+    <div class="sidebar-section">Cloud Services</div>
+    <div class="sidebar-item" onclick="showView('loadbalancer')"><span class="icon">⚖️</span> Load Balancer</div>
+    <div class="sidebar-item" onclick="showView('monitor')"><span class="icon">📊</span> Monitoring</div>
+    <div class="sidebar-item" onclick="showView('security')"><span class="icon">🔒</span> Security (IAM)</div>
+    <div class="sidebar-section">Admin</div>
+    <div class="sidebar-item" onclick="showView('users')"><span class="icon">👥</span> Users</div>
+  </aside>
+
+  <main>
+
+    <!-- ── DASHBOARD ── -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Cloud-Based Student Resource Portal — SE IT-C, TCET · AY 2025-26</div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-label">Total Resources</div>
+          <div class="stat-val" id="stat-resources">42</div>
+          <div class="stat-sub up">↑ 6 this week</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Active Users</div>
+          <div class="stat-val" id="stat-users">128</div>
+          <div class="stat-sub up">↑ 12 online now</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Server Load</div>
+          <div class="stat-val" id="stat-load">34%</div>
+          <div class="stat-sub">Balanced across 3 nodes</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Uptime</div>
+          <div class="stat-val">99.8%</div>
+          <div class="stat-sub up">All systems operational</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Recent Resources</div>
+        <button class="btn btn-ghost" onclick="showView('resources')">View All</button>
+      </div>
+      <div class="resources-grid" id="recent-resources"></div>
+    </div>
+
+    <!-- ── RESOURCES ── -->
+    <div class="view" id="view-resources">
+      <div class="page-title">Resource Library</div>
+      <div class="page-sub">All uploaded study materials, notes, and references</div>
+      <div class="section-header">
+        <div style="display:flex;gap:0.5rem;">
+          <select id="filter-subject" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:0.45rem 0.8rem;color:var(--text);font-size:0.84rem;font-family:var(--font);" onchange="renderResources()">
+            <option value="">All Subjects</option>
+            <option>Cloud Computing</option>
+            <option>NoSQL DB</option>
+            <option>EVS</option>
+            <option>OS</option>
+          </select>
+          <select id="filter-type" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:0.45rem 0.8rem;color:var(--text);font-size:0.84rem;font-family:var(--font);" onchange="renderResources()">
+            <option value="">All Types</option>
+            <option>PDF</option>
+            <option>Video</option>
+            <option>Code</option>
+            <option>Notes</option>
+          </select>
+        </div>
+        <button class="btn" onclick="openUpload()">+ Upload Resource</button>
+      </div>
+      <div class="resources-grid" id="all-resources"></div>
+    </div>
+
+    <!-- ── LOAD BALANCER ── -->
+    <div class="view" id="view-loadbalancer">
+      <div class="page-title">Load Balancer</div>
+      <div class="page-sub">Real-time request distribution across cloud nodes using Round-Robin algorithm</div>
+
+      <div class="lb-grid">
+        <div class="lb-card">
+          <h3>Server Nodes</h3>
+          <div class="servers-list" id="servers-list"></div>
+          <br>
+          <button class="btn" style="font-size:0.82rem;padding:0.45rem 0.9rem;" onclick="simulateRequest()">Simulate Request ▶</button>
+          <button class="btn btn-ghost" style="font-size:0.82rem;padding:0.45rem 0.9rem;margin-left:0.5rem;" onclick="addServerNode()">+ Add Node</button>
+        </div>
+        <div class="lb-card">
+          <h3>Request Distribution (last 12s)</h3>
+          <div class="chart-area" id="lb-chart"></div>
+          <div class="chart-labels" id="lb-labels"></div>
+        </div>
+      </div>
+
+      <div class="lb-card" style="margin-bottom:1.5rem;">
+        <h3>Load Balancing Algorithm</h3>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
+            <input type="radio" name="algo" value="round-robin" checked onchange="setAlgo(this.value)"> Round-Robin
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
+            <input type="radio" name="algo" value="least-conn" onchange="setAlgo(this.value)"> Least Connections
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
+            <input type="radio" name="algo" value="weighted" onchange="setAlgo(this.value)"> Weighted
+          </label>
+        </div>
+        <div id="algo-desc" style="font-size:0.84rem;color:var(--muted);background:var(--surface2);padding:0.75rem 1rem;border-radius:8px;line-height:1.6;"></div>
+      </div>
+
+      <div class="lb-card">
+        <h3>Live Request Log</h3>
+        <div class="log-box" id="lb-log">Waiting for requests...</div>
+      </div>
+    </div>
+
+    <!-- ── MONITOR ── -->
+    <div class="view" id="view-monitor">
+      <div class="page-title">Cloud Monitoring</div>
+      <div class="page-sub">Application performance metrics & infrastructure health</div>
+
+      <div class="monitor-metrics">
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-cpu">23%</div>
+          <div class="m-label">CPU Usage</div>
+        </div>
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-mem">41%</div>
+          <div class="m-label">Memory</div>
+        </div>
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-latency">48ms</div>
+          <div class="m-label">Avg Latency</div>
+        </div>
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-rps">312</div>
+          <div class="m-label">Req / sec</div>
+        </div>
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-errors">0.2%</div>
+          <div class="m-label">Error Rate</div>
+        </div>
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-disk">18%</div>
+          <div class="m-label">Disk I/O</div>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-bottom:1rem;">
+        <div class="section-title">System Logs</div>
+        <button class="btn btn-ghost" onclick="clearLogs()" style="font-size:0.82rem;padding:0.4rem 0.8rem;">Clear</button>
+      </div>
+      <div class="log-box" id="monitor-log"></div>
+    </div>
+
+    <!-- ── SECURITY ── -->
+    <div class="view" id="view-security">
+      <div class="page-title">Security & IAM</div>
+      <div class="page-sub">Identity & Access Management, encryption, and cloud security policies</div>
+
+      <div class="security-grid">
+        <div class="sec-card">
+          <div class="sec-header">
+            <span class="sec-icon">🔐</span>
+            <div>
+              <div class="sec-title">HTTPS / TLS Encryption</div>
+              <div class="sec-status status-ok">● Enabled — TLS 1.3</div>
+            </div>
+          </div>
+          <div class="rule-list">
+            <div class="rule-item"><span class="bullet"></span> All traffic encrypted in transit</div>
+            <div class="rule-item"><span class="bullet"></span> Certificate auto-renewal via Let's Encrypt</div>
+            <div class="rule-item"><span class="bullet"></span> HSTS headers enforced</div>
+            <div class="rule-item"><span class="bullet"></span> HTTP → HTTPS redirect active</div>
+          </div>
+        </div>
+
+        <div class="sec-card">
+          <div class="sec-header">
+            <span class="sec-icon">👤</span>
+            <div>
+              <div class="sec-title">Identity & Access Management</div>
+              <div class="sec-status status-ok">● 3 roles configured</div>
+            </div>
+          </div>
+          <div class="rule-list" style="margin-top:0.5rem;">
+            <div class="rule-item"><span class="bullet"></span> <strong>Admin</strong> — Full read/write, user mgmt</div>
+            <div class="rule-item"><span class="bullet"></span> <strong>Faculty</strong> — Upload, edit own resources</div>
+            <div class="rule-item"><span class="bullet"></span> <strong>Student</strong> — Read-only, download</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:0.8rem;padding:0.4rem 0.8rem;margin-top:0.9rem;" onclick="showToast('IAM policy refreshed ✓', 'success')">Refresh Policies</button>
+        </div>
+
+        <div class="sec-card">
+          <div class="sec-header">
+            <span class="sec-icon">🛡️</span>
+            <div>
+              <div class="sec-title">Firewall Rules</div>
+              <div class="sec-status status-ok">● 5 rules active</div>
+            </div>
+          </div>
+          <div class="rule-list">
+            <div class="rule-item"><span class="bullet"></span> Allow TCP 443 (HTTPS) from 0.0.0.0/0</div>
+            <div class="rule-item"><span class="bullet"></span> Allow TCP 80 → redirect 443</div>
+            <div class="rule-item"><span class="bullet"></span> Allow TCP 22 (SSH) from admin IPs only</div>
+            <div class="rule-item"><span class="bullet"></span> Block all other inbound by default</div>
+            <div class="rule-item"><span class="bullet"></span> Allow outbound: all</div>
+          </div>
+        </div>
+
+        <div class="sec-card">
+          <div class="sec-header">
+            <span class="sec-icon">🔑</span>
+            <div>
+              <div class="sec-title">Storage Encryption (at rest)</div>
+              <div class="sec-status status-ok">● AES-256 enabled</div>
+            </div>
+          </div>
+          <div class="rule-list">
+            <div class="rule-item"><span class="bullet"></span> Cloud Storage bucket encrypted at rest</div>
+            <div class="rule-item"><span class="bullet"></span> Google-managed encryption keys (GMEK)</div>
+            <div class="rule-item"><span class="bullet"></span> Bucket versioning enabled</div>
+            <div class="rule-item"><span class="bullet"></span> Access logs enabled (audit trail)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USERS ── -->
+    <div class="view" id="view-users">
+      <div class="page-title">User Management</div>
+      <div class="page-sub">Registered students and faculty — SE IT-C batch</div>
+      <div class="section-header">
+        <div></div>
+        <button class="btn" onclick="addUser()">+ Add User</button>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <table class="users-table" id="users-table">
+          <thead>
+            <tr>
+              <th>User</th><th>Role</th><th>Uploads</th><th>Last Active</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <div class="modal-title">Upload Resource</div>
+    <div class="modal-sub">Files are stored in Cloud Storage and served via CDN</div>
+    <div class="upload-zone" onclick="showToast('File picker opened (demo mode)', 'info')">
+      <div class="up-icon">☁️</div>
+      <p>Click to select file or drag & drop</p>
+      <p style="font-size:0.75rem;margin-top:0.3rem;color:var(--muted);">PDF, MP4, ZIP, DOCX up to 200MB</p>
+    </div>
+    <div class="form-row">
+      <input id="upload-title" placeholder="Resource title" />
+      <select id="upload-subject">
+        <option>Cloud Computing</option>
+        <option>NoSQL DB</option>
+        <option>EVS</option>
+        <option>OS</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <select id="upload-type">
+        <option>PDF</option>
+        <option>Video</option>
+        <option>Code</option>
+        <option>Notes</option>
+      </select>
+      <input placeholder="Author / Faculty" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeUpload()">Cancel</button>
+      <button class="btn" onclick="submitUpload()">Upload to Cloud ☁️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────
+const resources = [
+  { id:1, title:'Cloud Deployment – Lab Manual', subject:'Cloud Computing', type:'PDF', icon:'📄', downloads:87, desc:'GCP & AWS deployment notes' },
+  { id:2, title:'Docker & Containerization Guide', subject:'Cloud Computing', type:'Code', icon:'🐳', downloads:54, desc:'Dockerfile + Compose examples' },
+  { id:3, title:'NoSQL – MongoDB & Neo4j Lab', subject:'NoSQL DB', type:'Notes', icon:'🗄️', downloads:72, desc:'Graph & document DB experiments' },
+  { id:4, title:'Terraform IaC Tutorial', subject:'Cloud Computing', type:'Video', icon:'🎬', downloads:33, desc:'Infrastructure as code walkthrough' },
+  { id:5, title:'EVS Environmental Laws PPT', subject:'EVS', type:'PDF', icon:'🌿', downloads:61, desc:'Forest, Wildlife & Pollution Acts' },
+  { id:6, title:'Load Balancing Algorithms', subject:'Cloud Computing', type:'Notes', icon:'⚖️', downloads:45, desc:'Round-robin, least-conn, weighted' },
+  { id:7, title:'VPC Setup Guide – GCP', subject:'Cloud Computing', type:'PDF', icon:'🌐', downloads:29, desc:'Subnets, routing, security groups' },
+  { id:8, title:'OS Process Scheduling Notes', subject:'OS', type:'Notes', icon:'⚙️', downloads:93, desc:'CPU scheduling algorithms' },
+  { id:9, title:'Cloud Security Best Practices', subject:'Cloud Computing', type:'PDF', icon:'🔒', downloads:38, desc:'IAM, encryption, access control' },
+];
+
+const users = [
+  { name:'Aman Sharma', initials:'AS', role:'Admin', uploads:12, lastActive:'2 min ago', status:'online' },
+  { name:'Priya Mehta', initials:'PM', role:'Faculty', uploads:25, lastActive:'10 min ago', status:'online' },
+  { name:'Rohan Patil', initials:'RP', role:'Student', uploads:4, lastActive:'1 hr ago', status:'idle' },
+  { name:'Sneha Joshi', initials:'SJ', role:'Student', uploads:2, lastActive:'3 hrs ago', status:'offline' },
+  { name:'Dr. Shantanu Das', initials:'SD', role:'Faculty', uploads:18, lastActive:'Yesterday', status:'offline' },
+];
+
+// ─── VIEWS ──────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll(`[onclick="showView('${name}')"]`).forEach(el => el.classList.add('active'));
+
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'resources') renderResources();
+  if (name === 'loadbalancer') initLB();
+  if (name === 'monitor') initMonitor();
+  if (name === 'users') renderUsers();
+}
+
+// ─── RESOURCES ──────────────────────────────────────────────────
+function resourceCard(r) {
+  const badgeMap = { PDF:'badge-pdf', Video:'badge-video', Code:'badge-code', Notes:'badge-notes' };
+  return `<div class="resource-card" onclick="showToast('Opening: ${r.title}', 'info')">
+    <div class="rc-header">
+      <span class="rc-icon">${r.icon}</span>
+      <span class="rc-badge ${badgeMap[r.type]}">${r.type}</span>
+    </div>
+    <div class="rc-title">${r.title}</div>
+    <div class="rc-sub">${r.desc}</div>
+    <div class="rc-footer">
+      <span class="rc-subject">${r.subject}</span>
+      <span class="rc-downloads">↓ ${r.downloads}</span>
+    </div>
+  </div>`;
+}
+
+function renderDashboard() {
+  document.getElementById('recent-resources').innerHTML = resources.slice(0,6).map(resourceCard).join('');
+}
+
+function renderResources() {
+  const subj = document.getElementById('filter-subject')?.value || '';
+  const type = document.getElementById('filter-type')?.value || '';
+  const filtered = resources.filter(r =>
+    (!subj || r.subject === subj) && (!type || r.type === type)
+  );
+  document.getElementById('all-resources').innerHTML = filtered.map(resourceCard).join('');
+}
+
+// ─── LOAD BALANCER ──────────────────────────────────────────────
+const servers = [
+  { name:'Node-A (us-central)', region:'Iowa, USA', load:28, status:'green', connections:14 },
+  { name:'Node-B (asia-south)', region:'Mumbai, India', load:45, status:'orange', connections:22 },
+  { name:'Node-C (europe-west)', region:'Frankfurt, EU', load:19, status:'green', connections:9 },
+];
+let algo = 'round-robin';
+let rrIndex = 0;
+const lbHistory = Array(12).fill(0);
+let lbInterval = null;
+
+const algoDescs = {
+  'round-robin': 'Round-Robin: Each incoming request is forwarded to the next server in sequence. Simple, fair distribution. Works best when all servers have equal capacity.',
+  'least-conn': 'Least Connections: Requests are routed to the server with the fewest active connections. Ideal for varied request durations — prevents overload on busy nodes.',
+  'weighted': 'Weighted Round-Robin: Each server gets a weight based on capacity. Node-A (weight 3) handles 3× more traffic than Node-C (weight 1). Best for heterogeneous server fleets.'
+};
+
+function setAlgo(a) { algo = a; document.getElementById('algo-desc').textContent = algoDescs[a]; }
+
+function renderServers() {
+  const dotClass = { green:'dot-green', orange:'dot-orange', red:'dot-red' };
+  const fillClass = { green:'fill-green', orange:'fill-orange', red:'fill-red' };
+  document.getElementById('servers-list').innerHTML = servers.map((s,i) => `
+    <div class="server-row">
+      <span class="server-dot ${dotClass[s.status]}"></span>
+      <div style="flex:1">
+        <div class="server-name">${s.name}</div>
+        <div class="server-region">${s.region} · ${s.connections} conns</div>
+      </div>
+      <div class="server-load-bar"><div class="server-load-fill ${fillClass[s.status]}" style="width:${s.load}%"></div></div>
+      <span class="server-pct" style="color:var(--${s.status === 'green' ? 'accent2' : s.status === 'orange' ? 'accent3' : 'danger'})">${s.load}%</span>
+    </div>
+  `).join('');
+}
+
+function renderChart() {
+  const max = Math.max(...lbHistory, 1);
+  document.getElementById('lb-chart').innerHTML = lbHistory.map((v,i) => {
+    const h = Math.round((v / max) * 130) + 4;
+    const active = i === lbHistory.length - 1;
+    return `<div class="chart-bar" style="height:${h}px;${active ? 'background:var(--accent);' : ''}"></div>`;
+  }).join('');
+  document.getElementById('lb-labels').innerHTML = lbHistory.map((_,i) => `<span>${i === 11 ? 'now' : (11-i) + 's'}</span>`).reverse().map((_,i) => `<span>${i===0?'now':(i)+'s'}</span>`).join('');
+}
+
+function simulateRequest() {
+  let target;
+  if (algo === 'round-robin') { target = rrIndex % servers.length; rrIndex++; }
+  else if (algo === 'least-conn') { target = servers.reduce((a,b,i) => servers[i].connections < servers[a].connections ? i : a, 0); }
+  else { const weights = [3,2,1]; const pool = [0,0,0,1,1,2]; target = pool[Math.floor(Math.random()*pool.length)]; }
+
+  const delta = Math.floor(Math.random() * 12) + 3;
+  servers[target].load = Math.min(95, servers[target].load + delta);
+  servers[target].connections++;
+  servers[target].status = servers[target].load > 80 ? 'red' : servers[target].load > 55 ? 'orange' : 'green';
+
+  lbHistory.push(delta); lbHistory.shift();
+
+  const log = document.getElementById('lb-log');
+  const ts = new Date().toLocaleTimeString();
+  log.innerHTML = `<span class="log-info">[${ts}] REQUEST → ${servers[target].name} | Load: ${servers[target].load}% | Algorithm: ${algo}</span>\n` + log.innerHTML;
+
+  renderServers(); renderChart();
+
+  // gradually cool servers
+  setTimeout(() => {
+    servers[target].load = Math.max(5, servers[target].load - delta);
+    servers[target].connections = Math.max(0, servers[target].connections - 1);
+    servers[target].status = servers[target].load > 80 ? 'red' : servers[target].load > 55 ? 'orange' : 'green';
+    renderServers();
+  }, 3000);
+}
+
+function addServerNode() {
+  const id = String.fromCharCode(65 + servers.length);
+  servers.push({ name:`Node-${id} (new)`, region:'Custom Region', load:0, status:'green', connections:0 });
+  renderServers();
+  showToast(`Node-${id} added to pool ✓`, 'success');
+}
+
+function initLB() {
+  renderServers(); renderChart();
+  document.getElementById('algo-desc').textContent = algoDescs['round-robin'];
+  if (lbInterval) clearInterval(lbInterval);
+  lbInterval = setInterval(() => {
+    if (Math.random() > 0.4) simulateRequest();
+  }, 2000);
+}
+
+// ─── MONITOR ────────────────────────────────────────────────────
+let monitorInterval = null;
+
+function initMonitor() {
+  if (monitorInterval) clearInterval(monitorInterval);
+  appendLog();
+  monitorInterval = setInterval(() => {
+    const cpu = Math.floor(Math.random() * 60) + 10;
+    const mem = Math.floor(Math.random() * 40) + 30;
+    const lat = Math.floor(Math.random() * 80) + 20;
+    const rps = Math.floor(Math.random() * 200) + 200;
+    document.getElementById('m-cpu').textContent = cpu + '%';
+    document.getElementById('m-mem').textContent = mem + '%';
+    document.getElementById('m-latency').textContent = lat + 'ms';
+    document.getElementById('m-rps').textContent = rps;
+
+    setMetricClass('m-cpu', cpu > 80 ? 'crit' : cpu > 60 ? 'warn' : 'ok');
+    setMetricClass('m-mem', mem > 80 ? 'crit' : mem > 60 ? 'warn' : 'ok');
+    setMetricClass('m-latency', lat > 150 ? 'crit' : lat > 100 ? 'warn' : 'ok');
+
+    if (Math.random() > 0.6) appendLog();
+  }, 2500);
+}
+
+function setMetricClass(id, cls) {
+  const el = document.getElementById(id).parentElement;
+  el.className = 'metric-pill ' + cls;
+}
+
+const logMsgs = [
+  ['info','GCP Load Balancer health check passed'],
+  ['info','Cloud Run instance autoscaled: 2 → 3 containers'],
+  ['info','Request served by Node-B (asia-south1) in 43ms'],
+  ['warn','Node-C CPU spike: 72% — monitoring'],
+  ['info','Cloud Storage: 3 new objects uploaded'],
+  ['info','Firestore read: 142 documents fetched'],
+  ['info','IAM token refreshed for service account'],
+  ['warn','Response latency elevated: 210ms avg'],
+  ['info','Docker container restarted: cloudedu-api (healthy)'],
+  ['info','SSL certificate renewed via Let\'s Encrypt'],
+];
+
+function appendLog() {
+  const log = document.getElementById('monitor-log');
+  const [type, msg] = logMsgs[Math.floor(Math.random() * logMsgs.length)];
+  const ts = new Date().toLocaleTimeString();
+  const cls = type === 'warn' ? 'log-warn' : 'log-info';
+  log.innerHTML = `<span class="${cls}">[${ts}] [${type.toUpperCase()}] ${msg}</span>\n` + log.innerHTML;
+}
+
+function clearLogs() { document.getElementById('monitor-log').innerHTML = ''; }
+
+// ─── USERS ──────────────────────────────────────────────────────
+function renderUsers() {
+  const roleColor = { Admin:'var(--danger)', Faculty:'var(--accent3)', Student:'var(--accent)' };
+  const statusColor = { online:'var(--accent2)', idle:'var(--accent3)', offline:'var(--muted)' };
+  document.getElementById('users-tbody').innerHTML = users.map(u => `
+    <tr>
+      <td><span class="user-avatar">${u.initials}</span>${u.name}</td>
+      <td><span style="color:${roleColor[u.role]};font-weight:600;font-size:0.82rem;">${u.role}</span></td>
+      <td>${u.uploads}</td>
+      <td style="color:var(--muted)">${u.lastActive}</td>
+      <td><span style="color:${statusColor[u.status]};font-size:0.82rem;">● ${u.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+function addUser() {
+  const name = prompt('Enter new user name:');
+  if (name) {
+    users.push({ name, initials: name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2), role:'Student', uploads:0, lastActive:'Just now', status:'online' });
+    renderUsers();
+    showToast(`User ${name} added ✓`, 'success');
+  }
+}
+
+// ─── UPLOAD ──────────────────────────────────────────────────────
+function openUpload() { document.getElementById('upload-modal').classList.add('open'); }
+function closeUpload() { document.getElementById('upload-modal').classList.remove('open'); }
+function submitUpload() {
+  const title = document.getElementById('upload-title').value || 'New Resource';
+  const subject = document.getElementById('upload-subject').value;
+  const type = document.getElementById('upload-type').value;
+  const icons = { PDF:'📄', Video:'🎬', Code:'💻', Notes:'📝' };
+  resources.push({ id: resources.length+1, title, subject, type, icon: icons[type], downloads:0, desc:'Newly uploaded' });
+  closeUpload();
+  showToast(`"${title}" uploaded to Cloud Storage ✓`, 'success');
+  document.getElementById('stat-resources').textContent = resources.length;
+}
+
+// ─── TOAST ──────────────────────────────────────────────────────
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'success' ? '✓ ' : 'ℹ ') + msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────
+renderDashboard();
+</script>
+</body>
+</html>
